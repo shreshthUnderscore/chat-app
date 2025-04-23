@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function FriendList({
   token,
   selectedFriend,
@@ -10,7 +12,7 @@ export default function FriendList({
 
   useEffect(() => {
     if (!token) return;
-    fetch("http://localhost:4000/api/friends", {
+    fetch(`${BACKEND_URL}/api/friends`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

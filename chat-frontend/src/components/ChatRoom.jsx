@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function ChatRoom({ token, friend, username }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -13,7 +15,7 @@ export default function ChatRoom({ token, friend, username }) {
     setMessages([]);
     setError(null);
     if (!token || !friend) return;
-    fetch(`http://localhost:4000/api/dm/${friend.id}`, {
+    fetch(`${BACKEND_URL}/api/dm/${friend.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -35,7 +37,10 @@ export default function ChatRoom({ token, friend, username }) {
   // WebSocket for DMs
   useEffect(() => {
     if (!token || !friend) return;
-    const wsURL = `ws://localhost:4000?token=${encodeURIComponent(token)}`;
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsURL = `${wsProtocol}//${
+      new URL(BACKEND_URL).host
+    }?token=${encodeURIComponent(token)}`;
     const socket = new window.WebSocket(wsURL);
     setWs(socket);
 
@@ -54,14 +59,15 @@ export default function ChatRoom({ token, friend, username }) {
             setMessages((prev) => [...prev, msg.message]);
           }
         }
-      } catch {}
+      } catch (error) {
+        console.error("Failed to parse WebSocket message:", error);
+      }
     };
 
     return () => {
       socket.close();
       setWs(null);
     };
-    // eslint-disable-next-line
   }, [token, friend]);
 
   useEffect(() => {

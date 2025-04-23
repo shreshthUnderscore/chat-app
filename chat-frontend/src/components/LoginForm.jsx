@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function LoginForm({ onAuth }) {
   const [mode, setMode] = useState("login"); // 'login' or 'register'
   const [username, setUsername] = useState("");
@@ -14,9 +16,7 @@ export default function LoginForm({ onAuth }) {
 
     try {
       const resp = await fetch(
-        mode === "login"
-          ? "http://localhost:4000/api/auth/login"
-          : "http://localhost:4000/api/auth/register",
+        `${BACKEND_URL}/api/auth/${mode === "login" ? "login" : "register"}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -30,7 +30,7 @@ export default function LoginForm({ onAuth }) {
       } else {
         setError(data.error || "Something went wrong");
       }
-    } catch (err) {
+    } catch {
       setError("Network error");
     }
     setLoading(false);
