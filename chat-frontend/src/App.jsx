@@ -30,18 +30,29 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      <header className="flex items-center justify-between p-4 bg-blue-600 text-white shadow">
-        <div className="text-2xl font-bold">Panchayat</div>
-        <div>
-          <span className="mr-3">Hello, {username}</span>
+      <header className="flex items-center justify-between px-6 py-3 bg-white shadow sticky top-0 z-10">
+        <div className="flex items-center space-x-2">
+          <span className="text-2xl font-bold text-blue-600 tracking-tight">
+            Panchayat
+          </span>
+          <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded text-xs font-semibold">
+            BETA
+          </span>
+        </div>
+        <div className="flex items-center space-x-3">
+          <span className="text-gray-700 font-medium">{username}</span>
+          <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-blue-800 font-bold uppercase">
+            {username[0]}
+          </div>
           <button
-            className="px-3 py-1 text-sm bg-red-500 rounded hover:bg-red-600"
+            className="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded transition"
             onClick={handleLogout}
           >
             Log out
           </button>
         </div>
       </header>
+
       <main className="flex flex-1 min-h-0">
         <FriendList
           token={token}
