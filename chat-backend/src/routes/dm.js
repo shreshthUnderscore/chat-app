@@ -3,19 +3,9 @@ const prisma = require("../prisma");
 const { authenticateToken } = require("../auth");
 const router = express.Router();
 
-// Utility: check if two users are friends (accepted)
-async function areFriends(userId, friendId) {
-  if (userId === friendId) return false; // No DMs with self
-  const fs = await prisma.friendship.findFirst({
-    where: {
-      status: "accepted",
-      OR: [
-        { friendAId: userId, friendBId: friendId },
-        { friendAId: friendId, friendBId: userId },
-      ],
-    },
-  });
-  return !!fs;
+// Utility: all users are friends by default (except self)
+function areFriends(userId, friendId) {
+  return userId !== friendId;
 }
 
 // GET /api/dm/:friendId - get all messages between this user and a friend
@@ -23,8 +13,12 @@ router.get("/:friendId", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   const friendId = parseInt(req.params.friendId);
 
-  if (!(await areFriends(userId, friendId)))
-    return res.status(403).json({ error: "Not friends" });
+  if (!areFriends(userId, friendId))
+    return res.status(403).json({ error: "Cannot DM yourself" });
+
+  // Ensure friend exists
+  const friend = await prisma.user.findUnique({ where: { id: friendId } });
+  if (!friend) return res.status(404).json({ error: "User not found" });
 
   const messages = await prisma.message.findMany({
     where: {
@@ -49,8 +43,13 @@ router.post("/:friendId", authenticateToken, async (req, res) => {
   const friendId = parseInt(req.params.friendId);
   const { content } = req.body;
 
-  if (!(await areFriends(userId, friendId)))
-    return res.status(403).json({ error: "Not friends" });
+  if (!areFriends(userId, friendId))
+    return res.status(403).json({ error: "Cannot DM yourself" });
+
+  // Ensure friend exists
+  const friend = await prisma.user.findUnique({ where: { id: friendId } });
+  if (!friend) return res.status(404).json({ error: "User not found" });
+
   if (!content || !content.trim())
     return res.status(400).json({ error: "Message content required" });
 
@@ -66,7 +65,7 @@ router.post("/:friendId", authenticateToken, async (req, res) => {
     },
   });
 
-  // You can later trigger a WebSocket notification here
+  // (WebSocket notification logic can go here if needed)
 
   res.status(201).json(message);
 });

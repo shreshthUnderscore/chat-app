@@ -5,17 +5,31 @@ export default function ChatRoom({ token, friend, username }) {
   const [input, setInput] = useState("");
   const [ws, setWs] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
+  const [error, setError] = useState(null);
   const chatEndRef = useRef(null);
 
   // Load DM history when friend changes
   useEffect(() => {
     setMessages([]);
+    setError(null);
     if (!token || !friend) return;
     fetch(`http://localhost:4000/api/dm/${friend.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => res.json())
-      .then((data) => setMessages(data || []));
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json();
+          setError(err.error || "Failed to load messages");
+          setMessages([]);
+          return [];
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setMessages(data);
+        }
+      });
   }, [token, friend]);
 
   // WebSocket for DMs
@@ -66,6 +80,13 @@ export default function ChatRoom({ token, friend, username }) {
     return (
       <section className="flex-1 flex items-center justify-center text-gray-400">
         <div>Select a friend to chat</div>
+      </section>
+    );
+
+  if (error)
+    return (
+      <section className="flex-1 flex items-center justify-center text-red-500">
+        <div>{error}</div>
       </section>
     );
 
